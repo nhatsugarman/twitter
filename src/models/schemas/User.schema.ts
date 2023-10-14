@@ -8,7 +8,7 @@ enum UserVerifyState {
 
 interface UserType {
   _id?: ObjectId
-  name?: string
+  name: string
   email: string
   date_of_birth?: Date
   password: string
@@ -28,7 +28,7 @@ interface UserType {
 
 export default class User {
   _id?: ObjectId
-  name?: string
+  name: string
   email: string
   date_of_birth?: Date
   password: string
