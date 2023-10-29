@@ -2,17 +2,27 @@ import { Request, Response } from 'express'
 import { UserRegisterBody } from '~/models/request/User.request'
 import usersServices from '~/services/users.services'
 import { ParamsDictionary } from 'express-serve-static-core'
+import { ObjectId } from 'mongodb'
+import User from '~/models/schemas/User.schema'
 
 // Handle logic and return
-export function loginController(req: Request, res: Response) {
-  res.json({
-    message: 'Login successfull'
-  })
+export async function loginController(req: Request, res: Response) {
+  try {
+    const user = req.user as User
+    const user_id = user._id as ObjectId
+
+    const result = await usersServices.login(user_id.toString())
+
+    res.json({
+      message: 'Login successfull',
+      result
+    })
+  } catch (error) {
+    throw new Error('Login Failed')
+  }
 }
 
 export async function registerController(req: Request<ParamsDictionary, any, UserRegisterBody, any>, res: Response) {
-  const { email, password } = req.body
-
   try {
     const result = await usersServices.register(req.body)
 
