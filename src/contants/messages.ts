@@ -9,5 +9,10 @@ export const USER_MESSAGE = {
   PASSWORD_MUST_BE_A_STRING: 'Password must be a string',
   PASSWORD_MUST_BE_A_STRONG: 'Password must be a 6-60 characters long',
   USER_NOT_FOUND: 'User not found',
-  PASSWORD_LENGHT_MUST_BE_FROM_6_50: 'Password must be from 6 to 50'
+  EMAIL_OR_PASSWORD_ERROR: 'Email or password is error',
+  PASSWORD_LENGHT_MUST_BE_FROM_6_50: 'Password must be from 6 to 50',
+  ACCESS_TOKEN_IS_REQUIRED: 'Access token is required',
+  REFRETCH_TOKEN_IS_REQUIRED: 'Refretch token is required',
+  REFRETCH_TOKEN_IS_INVALID: 'Refretch token is invalid',
+  LOGOUT_SUCCESS: 'Logout Success'
 } as const

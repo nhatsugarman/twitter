@@ -5,5 +5,5 @@ export function sha256(content: string) {
 }
 
 export function hasPassword(password: string) {
-  return sha256(password + process.env.PASSWORD_HASHs)
+  return sha256(password + process.env.PASSWORD_HASH)
 }

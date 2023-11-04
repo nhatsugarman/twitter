@@ -1,6 +1,7 @@
 import { Collection, Db, MongoClient } from 'mongodb'
 import 'dotenv/config'
 import User from '~/models/schemas/User.schema'
+import RefreshToken from '~/models/schemas/RefreshToken.schema'
 
 // Connection URL
 const url = `mongodb+srv://${process.env.DB_USERNAME}:${process.env.DB_PASSWORD}@twitter.bwjqvht.mongodb.net/?retryWrites=true&w=majority`
@@ -24,7 +25,11 @@ class DatabaseService {
   }
 
   get users(): Collection<User> {
-    return this.db.collection('users')
+    return this.db.collection(process.env.USERS_COLLECTION as string)
+  }
+
+  get refreshTokens(): Collection<RefreshToken> {
+    return this.db.collection(process.env.DB_REFRESHTOKEN_COLLECTION as string)
   }
 }
 

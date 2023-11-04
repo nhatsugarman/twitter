@@ -36,3 +36,16 @@ export async function registerController(req: Request<ParamsDictionary, any, Use
     })
   }
 }
+
+export async function logoutController(req: Request, res: Response) {
+  try {
+    const { refresh_token } = req.body
+    const result = await usersServices.logout(refresh_token)
+
+    return res.json(result)
+  } catch (error) {
+    return res.status(400).json({
+      error: 'Register failed'
+    })
+  }
+}
