@@ -2,13 +2,13 @@ import jwt from 'jsonwebtoken'
 
 export function signToken({
   payload,
-  privateKey = process.env.JWT_SECRET as string,
+  privateKey,
   options = {
     algorithm: 'HS256'
   }
 }: {
   payload: any
-  privateKey?: string
+  privateKey: string
   options?: jwt.SignOptions
 }) {
   return new Promise<string>((resolve, reject) => {
@@ -22,13 +22,7 @@ export function signToken({
   })
 }
 
-export function verifyToken({
-  token,
-  secretOrPublickey = process.env.JWT_SECRET as string
-}: {
-  token: string
-  secretOrPublickey?: string
-}) {
+export function verifyToken({ token, secretOrPublickey }: { token: string; secretOrPublickey: string }) {
   return new Promise<jwt.JwtPayload>((resolve, reject) => {
     jwt.verify(token, secretOrPublickey, (error, decode) => {
       if (error) {

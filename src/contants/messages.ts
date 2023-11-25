@@ -14,5 +14,11 @@ export const USER_MESSAGE = {
   ACCESS_TOKEN_IS_REQUIRED: 'Access token is required',
   REFRETCH_TOKEN_IS_REQUIRED: 'Refretch token is required',
   REFRETCH_TOKEN_IS_INVALID: 'Refretch token is invalid',
-  LOGOUT_SUCCESS: 'Logout Success'
+  LOGOUT_SUCCESS: 'Logout Success',
+  EMAIL_VERIFY_TOKEN_IS_REQUIRED: 'Email verify token is required',
+  REFRESH_TOKEN_NOT_EXIST: 'Refresh token is not exist',
+  EMAIL_VERIFY: 'Email Verified',
+  EMAIL_VERIFY_BEFORE: 'Email Verified Before',
+  EMAIL_VERIFY_SUCCESS: 'Email Verified Success',
+  RESEND_VERIFY_SUCCESS: 'Resend Verify Success'
 } as const
