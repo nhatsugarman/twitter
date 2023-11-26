@@ -35,6 +35,19 @@ class UsersServices {
     })
   }
 
+  private signForgotPasswordToken(user_id: string) {
+    return signToken({
+      payload: {
+        user_id,
+        token_type: TokenType.ForgotPasswordToken
+      },
+      privateKey: process.env.JWT_SECRET_FORGOT_PASSWORD_TOKEN as string,
+      options: {
+        expiresIn: '7d'
+      }
+    })
+  }
+
   private signRefreshToken(user_id: string) {
     return signToken({
       payload: {
@@ -140,6 +153,48 @@ class UsersServices {
 
     return {
       message: USER_MESSAGE.RESEND_VERIFY_SUCCESS
+    }
+  }
+
+  async fotgotPassword(user_id: string) {
+    const forgot_passord_token = this.signForgotPasswordToken(user_id)
+
+    await databaseService.users.updateOne(
+      {
+        _id: new ObjectId(user_id)
+      },
+      [
+        {
+          $set: {
+            forgot_passord_token,
+            updated_at: '$$NOW'
+          }
+        }
+      ]
+    )
+    return {
+      message: 'Check email reset password'
+    }
+  }
+
+  async resetPassword(user_id: string, password: string) {
+    await databaseService.users.updateOne(
+      {
+        _id: new ObjectId(user_id)
+      },
+      [
+        {
+          $set: {
+            forgot_passord_token: '',
+            password: hasPassword(password),
+            updated_at: '$$NOW'
+          }
+        }
+      ]
+    )
+
+    return {
+      message: 'Reset Success'
     }
   }
 }

@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from 'express'
-import { checkSchema } from 'express-validator'
+import { ParamSchema, checkSchema } from 'express-validator'
 import { JsonWebTokenError } from 'jsonwebtoken'
 import httpStatus from '~/contants/httpStatus'
 import { USER_MESSAGE } from '~/contants/messages'
@@ -9,6 +9,107 @@ import usersServices from '~/services/users.services'
 import { hasPassword } from '~/utils/crypto'
 import { verifyToken } from '~/utils/jwt'
 import { validate } from '~/utils/validation'
+
+const forgotPasswordSchema: ParamSchema = {
+  trim: true,
+  custom: {
+    options: async (value: string, { req }) => {
+      if (!value) {
+        throw new ErrorWithStatus({
+          status: httpStatus.UNAUTHORIZED,
+          message: 'Forgot token is required'
+        })
+      }
+
+      try {
+        const decode_forgot_token = await verifyToken({
+          token: value,
+          secretOrPublickey: process.env.JWT_SECRET_FORGOT_PASSWORD_TOKEN as string
+        })
+
+        const { user_id } = decode_forgot_token
+
+        const user = await databaseService.users.findOne({ _id: new Object(user_id) })
+
+        if (user === null) {
+          throw new ErrorWithStatus({
+            message: USER_MESSAGE.USER_NOT_FOUND,
+            status: httpStatus.UNAUTHORIZED
+          })
+        }
+
+        if (user.forgot_password_token !== value) {
+          throw new ErrorWithStatus({
+            status: httpStatus.UNAUTHORIZED,
+            message: 'Invalid'
+          })
+        }
+
+        req.decode_forgot_token = decode_forgot_token
+      } catch (error) {
+        if (error instanceof JsonWebTokenError) {
+          throw new ErrorWithStatus({
+            message: USER_MESSAGE.REFRETCH_TOKEN_IS_INVALID,
+            status: 401
+          })
+        }
+
+        throw error
+      }
+    }
+  }
+}
+
+const passwordSchema: ParamSchema = {
+  notEmpty: true,
+  isString: true,
+  isLength: {
+    options: {
+      min: 5,
+      max: 50
+    }
+  },
+  isStrongPassword: {
+    options: {
+      minLength: 1,
+      minLowercase: 1,
+      minSymbols: 1,
+      minUppercase: 1,
+      minNumbers: 1
+    },
+    errorMessage: 'Password must be at least 6 characters long and containt at least'
+  }
+}
+
+const confirmPasswordSchema: ParamSchema = {
+  notEmpty: true,
+  isString: true,
+  isLength: {
+    options: {
+      min: 5,
+      max: 50
+    }
+  },
+  isStrongPassword: {
+    options: {
+      minLength: 1,
+      minLowercase: 1,
+      minSymbols: 1,
+      minUppercase: 1,
+      minNumbers: 1
+    },
+    errorMessage: 'Password must be at least 6 characters long and containt at least'
+  },
+  custom: {
+    options: (value, { req }) => {
+      if (value !== req.body.password) {
+        throw new Error('Password confirmation does not match password')
+      }
+
+      return true
+    }
+  }
+}
 
 export const loginValidator = validate(
   checkSchema(
@@ -89,55 +190,8 @@ export const registerValidator = checkSchema(
         }
       }
     },
-    password: {
-      notEmpty: true,
-      isString: true,
-      isLength: {
-        options: {
-          min: 5,
-          max: 50
-        }
-      },
-      isStrongPassword: {
-        options: {
-          minLength: 1,
-          minLowercase: 1,
-          minSymbols: 1,
-          minUppercase: 1,
-          minNumbers: 1
-        },
-        errorMessage: 'Password must be at least 6 characters long and containt at least'
-      }
-    },
-    confirm_password: {
-      notEmpty: true,
-      isString: true,
-      isLength: {
-        options: {
-          min: 5,
-          max: 50
-        }
-      },
-      isStrongPassword: {
-        options: {
-          minLength: 1,
-          minLowercase: 1,
-          minSymbols: 1,
-          minUppercase: 1,
-          minNumbers: 1
-        },
-        errorMessage: 'Password must be at least 6 characters long and containt at least'
-      },
-      custom: {
-        options: (value, { req }) => {
-          if (value !== req.body.password) {
-            throw new Error('Password confirmation does not match password')
-          }
-
-          return true
-        }
-      }
-    },
+    password: passwordSchema,
+    confirm_password: confirmPasswordSchema,
     date_of_birth: {
       isISO8601: {
         options: {
@@ -265,6 +319,97 @@ export const emailVerifyTokenValidator = validate(
           }
         }
       }
+    },
+    ['body']
+  )
+)
+
+export const forgotPasswordValidator = validate(
+  checkSchema(
+    {
+      email: {
+        notEmpty: true,
+        isEmail: true,
+        trim: true,
+        custom: {
+          options: async (value, { req }) => {
+            const user = databaseService.users.findOne({ email: value })
+
+            if (user === null) {
+              throw new Error(USER_MESSAGE.USER_NOT_FOUND)
+            }
+
+            req.user = user
+            return true
+          }
+        }
+      }
+    },
+    ['body']
+  )
+)
+
+export const verifyForgotTokenValidator = validate(
+  checkSchema(
+    {
+      forgot_password_token: {
+        trim: true,
+        custom: {
+          options: async (value: string, { req }) => {
+            if (!value) {
+              throw new ErrorWithStatus({
+                status: httpStatus.UNAUTHORIZED,
+                message: 'Forgot token is required'
+              })
+            }
+
+            try {
+              const decode_forgot_token = await verifyToken({
+                token: value,
+                secretOrPublickey: process.env.JWT_SECRET_FORGOT_PASSWORD_TOKEN as string
+              })
+
+              const { user_id } = decode_forgot_token
+
+              const user = await databaseService.users.findOne({ _id: new Object(user_id) })
+
+              if (user === null) {
+                throw new ErrorWithStatus({
+                  message: USER_MESSAGE.USER_NOT_FOUND,
+                  status: httpStatus.UNAUTHORIZED
+                })
+              }
+
+              if (user.forgot_password_token !== value) {
+                throw new ErrorWithStatus({
+                  status: httpStatus.UNAUTHORIZED,
+                  message: 'Invalid'
+                })
+              }
+            } catch (error) {
+              if (error instanceof JsonWebTokenError) {
+                throw new ErrorWithStatus({
+                  message: USER_MESSAGE.REFRETCH_TOKEN_IS_INVALID,
+                  status: 401
+                })
+              }
+
+              throw error
+            }
+          }
+        }
+      }
+    },
+    ['body']
+  )
+)
+
+export const resetPasswordValidator = validate(
+  checkSchema(
+    {
+      password: passwordSchema,
+      confirm_password: confirmPasswordSchema,
+      forgot_password_token: forgotPasswordSchema
     },
     ['body']
   )

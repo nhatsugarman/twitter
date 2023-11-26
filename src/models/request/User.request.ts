@@ -5,3 +5,7 @@ export interface UserRegisterBody {
   confirm_password: string
   date_of_birth: string
 }
+
+export interface ForgotPasswordReqBody {
+  email: string
+}

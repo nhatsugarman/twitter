@@ -1,5 +1,5 @@
 import { Request, Response } from 'express'
-import { UserRegisterBody } from '~/models/request/User.request'
+import { ForgotPasswordReqBody, UserRegisterBody } from '~/models/request/User.request'
 import usersServices from '~/services/users.services'
 import { ParamsDictionary } from 'express-serve-static-core'
 import { ObjectId } from 'mongodb'
@@ -8,6 +8,7 @@ import databaseService from '~/services/database.services'
 import { USER_MESSAGE } from '~/contants/messages'
 import httpStatus from '~/contants/httpStatus'
 import { TokenType } from '~/contants/enums'
+import { json } from 'stream/consumers'
 
 // Handle logic and return
 export async function loginController(req: Request, res: Response) {
@@ -107,6 +108,52 @@ export async function resendEmailVerifyController(req: Request, res: Response) {
       message: USER_MESSAGE.EMAIL_VERIFY_SUCCESS,
       result
     })
+  } catch (error) {
+    return res.status(400).json({
+      error: 'Register failed'
+    })
+  }
+}
+
+export async function forgotPasswordController(
+  req: Request<ParamsDictionary, any, ForgotPasswordReqBody>,
+  res: Response
+) {
+  try {
+    const { _id } = req.user as User
+
+    const result = await usersServices.fotgotPassword(String(_id))
+
+    return res.json(result)
+  } catch (error) {
+    return res.status(400).json({
+      error: 'Register failed'
+    })
+  }
+}
+
+export async function verifyForgotPasswordController(
+  req: Request<ParamsDictionary, any, ForgotPasswordReqBody>,
+  res: Response
+) {
+  try {
+    return res.json({
+      message: 'Verify success'
+    })
+  } catch (error) {
+    return res.status(400).json({
+      error: 'Register failed'
+    })
+  }
+}
+export async function resetPasswordController(req: any, res: Response) {
+  try {
+    const { user_id } = req.decode_forgot_token as any
+    const { password } = req.body
+
+    const result = await usersServices.resetPassword(user_id, password)
+
+    return res.json(result)
   } catch (error) {
     return res.status(400).json({
       error: 'Register failed'
