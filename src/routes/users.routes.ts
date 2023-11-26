@@ -4,6 +4,7 @@ import {
   forgotPasswordController,
   loginController,
   logoutController,
+  meController,
   registerController,
   resendEmailVerifyController,
   resetPasswordController
@@ -35,5 +36,7 @@ usersRouter.post('/forgot-password', forgotPasswordValidator, forgotPasswordCont
 usersRouter.post('/verify-forgot-password', verifyForgotTokenValidator, forgotPasswordController)
 
 usersRouter.post('/reset-password', resetPasswordValidator, resetPasswordController)
+
+usersRouter.get('/me', accessTokenValidator, meController)
 
 export default usersRouter

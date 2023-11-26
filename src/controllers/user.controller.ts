@@ -160,3 +160,19 @@ export async function resetPasswordController(req: any, res: Response) {
     })
   }
 }
+
+export async function meController(req: Request, res: Response) {
+  try {
+    const { user_id } = (req as any).decoded_authorization
+    const user = await usersServices.getMe(user_id)
+
+    return res.json({
+      message: 'Get me success',
+      result: user
+    })
+  } catch (error) {
+    return res.status(400).json({
+      error: 'Register failed'
+    })
+  }
+}
