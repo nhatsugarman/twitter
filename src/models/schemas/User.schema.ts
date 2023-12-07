@@ -16,7 +16,7 @@ interface UserType {
   updated_at?: Date
   email_verify_token?: string
   forgot_password_token?: string
-  verify?: UserVerifyState
+  verify: UserVerifyState
 
   bio?: string
   location?: string
@@ -36,7 +36,7 @@ export default class User {
   updated_at?: Date
   email_verify_token?: string
   forgot_password_token?: string
-  verify?: UserVerifyState
+  verify: UserVerifyState
 
   bio?: string
   location?: string

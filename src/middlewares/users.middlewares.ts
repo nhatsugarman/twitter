@@ -1,9 +1,11 @@
 import { NextFunction, Request, Response } from 'express'
 import { ParamSchema, checkSchema } from 'express-validator'
 import { JsonWebTokenError } from 'jsonwebtoken'
+import { ObjectId } from 'mongodb'
 import httpStatus from '~/contants/httpStatus'
 import { USER_MESSAGE } from '~/contants/messages'
 import { ErrorWithStatus } from '~/models/Errors'
+import { UserVerifyState } from '~/models/schemas/User.schema'
 import databaseService from '~/services/database.services'
 import usersServices from '~/services/users.services'
 import { hasPassword } from '~/utils/crypto'
@@ -107,6 +109,27 @@ const confirmPasswordSchema: ParamSchema = {
       }
 
       return true
+    }
+  }
+}
+
+const nameSchema: ParamSchema = {
+  notEmpty: true,
+  isString: true,
+  isLength: {
+    options: {
+      min: 1,
+      max: 256
+    }
+  },
+  trim: true
+}
+
+const dateOfBirthSchema = {
+  isISO8601: {
+    options: {
+      strict: true,
+      strictSeparator: true
     }
   }
 }
@@ -413,4 +436,121 @@ export const resetPasswordValidator = validate(
     },
     ['body']
   )
+)
+
+export const verifiedUserValidator = (req: Request, res: Response, next: NextFunction) => {
+  const { verify } = req.decoded_authorization
+
+  if (verify !== UserVerifyState.Verified) {
+    return next(
+      new ErrorWithStatus({
+        message: 'User is not verifed',
+        status: httpStatus.FORBIDDEN
+      })
+    )
+  }
+
+  next()
+}
+
+export const updateMeValidator = validate(
+  checkSchema(
+    {
+      name: { ...nameSchema, optional: true, notEmpty: undefined },
+      date_of_birth: { ...dateOfBirthSchema, optional: true },
+      bio: {
+        optional: true,
+        isString: {
+          errorMessage: 'Bio is string'
+        },
+        trim: true,
+        isLength: {
+          options: { min: 1, max: 200 },
+          errorMessage: 'Bio must be 1 to 200 characters'
+        }
+      },
+      location: {
+        optional: true,
+        isString: {
+          errorMessage: 'Bio is string'
+        },
+        trim: true,
+        isLength: {
+          options: { min: 1, max: 200 },
+          errorMessage: 'Bio must be 1 to 200 characters'
+        }
+      },
+      website: {
+        optional: true,
+        isString: {
+          errorMessage: 'Bio is string'
+        },
+        trim: true,
+        isLength: {
+          options: { min: 1, max: 200 },
+          errorMessage: 'Bio must be 1 to 200 characters'
+        }
+      },
+      username: {
+        optional: true,
+        isString: {
+          errorMessage: 'Bio is string'
+        },
+        trim: true,
+        isLength: {
+          options: { min: 1, max: 200 },
+          errorMessage: 'Bio must be 1 to 200 characters'
+        }
+      },
+      avatar: {
+        optional: true,
+        isString: {
+          errorMessage: 'Bio is string'
+        },
+        trim: true,
+        isLength: {
+          options: { min: 1, max: 200 },
+          errorMessage: 'Bio must be 1 to 200 characters'
+        }
+      },
+      cover_photo: {
+        optional: true,
+        isString: {
+          errorMessage: 'Bio is string'
+        },
+        trim: true,
+        isLength: {
+          options: { min: 1, max: 200 },
+          errorMessage: 'Bio must be 1 to 200 characters'
+        }
+      }
+    },
+    ['body']
+  )
+)
+
+export const followValidator = validate(
+  checkSchema({
+    followed_user_id: {
+      custom: {
+        options: async (value, { req }) => {
+          if (!ObjectId.isValid(value)) {
+            throw new ErrorWithStatus({
+              message: 'User not found',
+              status: httpStatus.NOT_FOUND
+            })
+          }
+
+          const followed_user = await databaseService.users.findOne({ _id: new ObjectId(value) })
+
+          if (followed_user === null) {
+            throw new ErrorWithStatus({
+              message: 'User not found',
+              status: httpStatus.NOT_FOUND
+            })
+          }
+        }
+      }
+    }
+  })
 )
