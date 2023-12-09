@@ -10,6 +10,7 @@ import {
   registerController,
   resendEmailVerifyController,
   resetPasswordController,
+  unfollowController,
   updateMeController
 } from '~/controllers/user.controller'
 import { filterMiddleware } from '~/middlewares/common.middlewares'
@@ -22,6 +23,7 @@ import {
   refreshTokenValidator,
   registerValidator,
   resetPasswordValidator,
+  unfollowValidator,
   updateMeValidator,
   verifiedUserValidator,
   verifyForgotTokenValidator
@@ -68,5 +70,9 @@ usersRouter.patch(
 usersRouter.get('/:username', getProfileController)
 
 usersRouter.get('/follow', accessTokenValidator, verifiedUserValidator, followValidator, followController)
+
+usersRouter.get('/follow/:user_id', accessTokenValidator, verifiedUserValidator, unfollowValidator, unfollowController)
+
+usersRouter.put('/change-password', accessTokenValidator, verifiedUserValidator, unfollowValidator, unfollowController)
 
 export default usersRouter

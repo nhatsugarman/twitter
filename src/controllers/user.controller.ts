@@ -1,5 +1,11 @@
 import { Request, Response } from 'express'
-import { FollowReqBody, ForgotPasswordReqBody, UpdateMeBody, UserRegisterBody } from '~/models/request/User.request'
+import {
+  FollowReqBody,
+  ForgotPasswordReqBody,
+  UnfollowReqParams,
+  UpdateMeBody,
+  UserRegisterBody
+} from '~/models/request/User.request'
 import usersServices from '~/services/users.services'
 import { ParamsDictionary } from 'express-serve-static-core'
 import { ObjectId } from 'mongodb'
@@ -219,6 +225,36 @@ export async function followController(req: Request<ParamsDictionary, any, Follo
     const { followed_user_id } = req.body
 
     const result = await usersServices.follow(user_id, followed_user_id)
+
+    return res.json(result)
+  } catch (error) {
+    return res.status(400).json({
+      error: 'Register failed'
+    })
+  }
+}
+
+export async function unfollowController(req: Request<UnfollowReqParams>, res: Response) {
+  try {
+    const { user_id } = req.decoded_authorization
+    const { user_id: followed_user_id } = req.params
+
+    const result = await usersServices.unfollow(user_id, followed_user_id)
+
+    return res.json(result)
+  } catch (error) {
+    return res.status(400).json({
+      error: 'Register failed'
+    })
+  }
+}
+
+export async function changePasswordController(req: Request, res: Response) {
+  try {
+    const { user_id } = req.decoded_authorization
+    const { password } = req.body
+
+    const result = await usersServices.changePassword(user_id, password)
 
     return res.json(result)
   } catch (error) {

@@ -4,6 +4,7 @@ import { JsonWebTokenError } from 'jsonwebtoken'
 import { ObjectId } from 'mongodb'
 import httpStatus from '~/contants/httpStatus'
 import { USER_MESSAGE } from '~/contants/messages'
+import { REGEX_USERNAME } from '~/contants/regex'
 import { ErrorWithStatus } from '~/models/Errors'
 import { UserVerifyState } from '~/models/schemas/User.schema'
 import databaseService from '~/services/database.services'
@@ -130,6 +131,28 @@ const dateOfBirthSchema = {
     options: {
       strict: true,
       strictSeparator: true
+    }
+  }
+}
+
+const userIdSchema: ParamSchema = {
+  custom: {
+    options: async (value, { req }) => {
+      if (!ObjectId.isValid(value)) {
+        throw new ErrorWithStatus({
+          message: 'User not found',
+          status: httpStatus.NOT_FOUND
+        })
+      }
+
+      const followed_user = await databaseService.users.findOne({ _id: new ObjectId(value) })
+
+      if (followed_user === null) {
+        throw new ErrorWithStatus({
+          message: 'User not found',
+          status: httpStatus.NOT_FOUND
+        })
+      }
     }
   }
 }
@@ -497,9 +520,17 @@ export const updateMeValidator = validate(
           errorMessage: 'Bio is string'
         },
         trim: true,
-        isLength: {
-          options: { min: 1, max: 200 },
-          errorMessage: 'Bio must be 1 to 200 characters'
+        custom: {
+          options: async (value: string, { req }) => {
+            if (!REGEX_USERNAME.test(value)) {
+              throw new Error('Invalid')
+            }
+
+            const user = await databaseService.users.findOne({ username: value })
+            if (user) {
+              throw Error('User name is existed')
+            }
+          }
         }
       },
       avatar: {
@@ -530,27 +561,53 @@ export const updateMeValidator = validate(
 )
 
 export const followValidator = validate(
+  checkSchema(
+    {
+      followed_user_id: userIdSchema
+    },
+    ['body']
+  )
+)
+
+export const unfollowValidator = validate(
+  checkSchema(
+    {
+      followed_user_id: userIdSchema
+    },
+    ['params']
+  )
+)
+
+export const changePasswordValidator = validate(
   checkSchema({
-    followed_user_id: {
+    old_password: {
+      ...passwordSchema,
       custom: {
-        options: async (value, { req }) => {
-          if (!ObjectId.isValid(value)) {
+        options: async (value: string, { req }) => {
+          const { user_id } = req.decoded_authorization
+
+          const user = await databaseService.users.findOne({ _id: new ObjectId(user_id) })
+
+          if (!user) {
             throw new ErrorWithStatus({
-              message: 'User not found',
-              status: httpStatus.NOT_FOUND
+              status: httpStatus.NOT_FOUND,
+              message: 'User not found'
             })
           }
 
-          const followed_user = await databaseService.users.findOne({ _id: new ObjectId(value) })
+          const { password } = user
 
-          if (followed_user === null) {
+          const isMatch = hasPassword(value) === password
+          if (!isMatch) {
             throw new ErrorWithStatus({
-              message: 'User not found',
-              status: httpStatus.NOT_FOUND
+              status: httpStatus.NOT_FOUND,
+              message: 'Not match'
             })
           }
         }
       }
-    }
+    },
+    password: passwordSchema,
+    confirm_password: confirmPasswordSchema
   })
 )
